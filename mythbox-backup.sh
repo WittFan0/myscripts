@@ -39,7 +39,7 @@ plex () {
     PLEXDATADIR='/var/lib/plexmediaserver/Library/Application Support/Plex Media Server'
     PLEXCACHE="$PLEXDATADIR/Cache"
     PLEXLOCALDIR="$LOCALDIR/plex"
-    PLEXBAKFILE="$PLEXLOCALDIR/plex-data-dirs.tar"
+    PLEXBAKFILE="$PLEXLOCALDIR/plex-database.tar"
 
     systemctl stop plexmediaserver.service && \
     runuser -u $PLEXOWNER -- tar --create --exclude="$PLEXCACHE" --file $PLEXBAKFILE --verbose "$PLEXDATADIR"/ && \
@@ -49,14 +49,15 @@ plex () {
     systemctl start plexmediaserver.service
 }
 
-media () {
+## not enough space on backup drive to also include movies and television
+homemedia () {
     rsync -av -e ssh \
-    /mnt/shared_data/home_movies-orig \
-    /mnt/shared_data/photos \
-    /mnt/shared_data/music \
+    /mnt/shared_data/media/videos/home_movies-orig \
+    /mnt/shared_data/media/photos \
+    /mnt/shared_data/media/music \
     $SSHUSER@$BACKUPSRVNAME:$REMOTEDIR/
 }
 
 nextcloud
 plex
-#media
+homemedia
