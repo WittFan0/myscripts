@@ -22,14 +22,14 @@ xdg_move () {
 add_path () {
     [ -d "$HOME/.local/bin" ] && printf "\n%s\n" "PATH=\"$HOME/.local/bin:$PATH\"" | tee -a "$HOME/.config/bash/bashrc"
     [ -d "$HOME/Dropbox/bin" ] && printf "\n%s\n" "PATH=\"$HOME/Dropbox/bin:$PATH\"" | tee -a "$HOME/.config/bash/bashrc"
-    [ -d "$HOME/Dropbox/bin/myscripts" ] && printf "\n%s\n" "PATH=\"$HOME/Dropbox/bin/myscripts:$PATH\"" | tee -a "$HOME/.config/bash/bashrc"
+    [ -d "$HOME/myscripts" ] && printf "\n%s\n" "PATH=\"$HOME/myscripts:$PATH\"" | tee -a "$HOME/.config/bash/bashrc"
 }
 
 add_aliases () {
     printf "\n%s\n" "[[ -f \"$HOME/.config/bash/aliases\" ]] && . \"$HOME/.config/bash/aliases\"" | \
-    tee -a "$HOME/.config/bash/bashrc" > /dev/null
+    tee -a "$HOME/.config/bash/bashrc" > /dev/null 2>&1
 
-    printf "\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
+    printf "\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
     "alias reboot='sudo reboot'" \
     "alias poweroff='sudo poweroff'" \
     "alias shutdown='sudo shutdown'" \
@@ -60,36 +60,38 @@ add_aliases () {
     "alias wakedan='wol 00:1e:37:cc:7e:76'" \
     "alias df='df -H'" \
     "alias du='du -ch'" | \
-    tee -a "$HOME/.config/bash/aliases" > /dev/null && \
-    . "$HOME/.config/bash/aliases"
+    tee -a "$HOME/.config/bash/aliases" > /dev/null 2>&1 # && \
+    # . "$HOME/.config/bash/aliases"  # This appears to only apply to thos shell session. It does not persist once this script exits.
 }
 
 ## TODO check whether we are on Arch 
 install_yay() {
-    mkdir -p "$HOME/.config/pacman"
-    printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
-    "PKGDEST=$HOME/build/packages" \
-    "SRCDEST=$HOME/build/sources" \
-    "SRCPKGDEST=$HOME/build/srcpackages" \
-    "LOGDEST=$HOME/build/makepkglogs" \
-    "PACKAGER=\"Lance Styles <lstyles@yahoo.com>\"" \
-    "GPGKEY=\"2BCEB89C8F157627\"" \
-    "MAKEFLAGS=\"-j\$(nproc)\"" \
-    "BUILDDIR=$HOME/build/makepkg" \
-    "COMPRESSZST=(zstd -c -z -q --threads=0 -)" \
-    "COMPRESSXZ=(xz -c -z --threads=0 -)" \
-    "COMPRESSGZ=(pigz -c -f -n)" \
-    "COMPRESSBZ2=(pbzip2 -c -f)" | \
-    tee "$HOME/.config/pacman/makepkg.conf" > /dev/null
-    sudo pacman -S --needed --noconfirm pigz pbzip2 go base-devel git
-    cd "$HOME/build/sources" && git clone https://aur.archlinux.org/yay.git && \
-    cd yay && \
-    makepkg -si --noconfirm
-    cd "$HOME" || exit
-    echo "yay installed"
+    if [ -f "/usr/bin/pacman" ]; then
+        mkdir -p "$HOME/.config/pacman"
+        printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
+        "PKGDEST=$HOME/build/packages" \
+        "SRCDEST=$HOME/build/sources" \
+        "SRCPKGDEST=$HOME/build/srcpackages" \
+        "LOGDEST=$HOME/build/makepkglogs" \
+        "PACKAGER=\"Lance Styles <lstyles@yahoo.com>\"" \
+        "GPGKEY=\"2BCEB89C8F157627\"" \
+        "MAKEFLAGS=\"-j\$(nproc)\"" \
+        "BUILDDIR=$HOME/build/makepkg" \
+        "COMPRESSZST=(zstd -c -z -q --threads=0 -)" \
+        "COMPRESSXZ=(xz -c -z --threads=0 -)" \
+        "COMPRESSGZ=(pigz -c -f -n)" \
+        "COMPRESSBZ2=(pbzip2 -c -f)" | \
+        tee "$HOME/.config/pacman/makepkg.conf" > /dev/null 2>&1
+        sudo pacman -S --needed --noconfirm pigz pbzip2 go base-devel git
+        cd "$HOME/build/sources" && git clone https://aur.archlinux.org/yay.git && \
+        cd yay && \
+        makepkg -si --noconfirm
+        cd "$HOME" || exit
+        echo "yay installed"
+    fi
 }
 
 xdg_move
 add_path
 add_aliases
-#install_yay
+install_yay
