@@ -18,6 +18,8 @@ if [ ! -f "/usr/bin/perl" ]; then
     exit 1
 fi
 
+KERNELTYPE="-zen"
+PRIMEGROUPS="sys,log,network,floppy,scanner,power,rfkill,users,video,storage,optical,lp,audio,wheel,adm"
 KEYTAICHI="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPPjd/u2DRWdXTBSdnCVYBJxql6qKpzgLm0je/SuDWOu lance@office-manjaro-2019-08-08"
 KEYPHONE="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID7tVx29wJ33kGSjuVVDHR24VE+E6jDmM/+yIxcFrYm2 A13"
 KEYCHROMEBK="ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1MjEAAACFBAHp+EsJ35cr1TaFYpmp5DM/7oI437btNrHMV49IQlPSNQ1rV+Y2i8l4MDV+eVvKwIoQXdIq/X52Jca8k8W9vUJJeQA3KdBRm/Ls7HS1K/tFWiYpzB8drlZWzz823WkE/Ml7xjLdqPJWeHeQiWNelg4qyVfq9YflgFAfwLzujm0CnYRgKA== lance@acer-c720"
@@ -97,7 +99,7 @@ mount_remote() {
 
 create_primeuser() {
     pass=$(perl -e 'print crypt($ARGV[0], "password")' "$password")
-    useradd -m -p "$pass" "$username" && echo "$username has been added to system!" || echo "Failed to add user $username!"
+    useradd -m -G "$PRIMEGROUPS" -p "$pass" "$username" && echo "$username has been added to system!" || echo "Failed to add user $username!"
 
     printf "\n%s\n%s\n" \
     "# LJS: Give $username sudo permission" \
@@ -119,14 +121,19 @@ create_primeuser() {
 
 force_pubkey() {
     printf "\n%s\n%s\n%s\n%s\n" \
-    "# LJS: force pubkey logins" \
-    "PasswordAuthentication no" \
-    "AuthenticationMethods publickey" \
-    "KbdInteractiveAuthentication no" | \
-    tee -a /etc/ssh/sshd_config > /dev/null 2>&1
+        "# LJS: force pubkey logins" \
+        "PasswordAuthentication no" \
+        "AuthenticationMethods publickey" \
+        "KbdInteractiveAuthentication no" | \
+        tee -a /etc/ssh/sshd_config > /dev/null 2>&1
 
     systemctl restart sshd.service
     passwd --lock root && echo "ssh password authentication disabled" || echo "Failed to disable password authentication!"
+}
+
+add_btrfs_to_mkinitcpio() {
+    sed -i -e "s/^BINARIES=.*/BINARIES=(btrfs)/g" /etc/mkinitcpio.conf
+    mkinitcpio -p linux"$KERNELTYPE"
 }
 
 mount_local
@@ -134,3 +141,4 @@ share_local
 mount_remote
 create_primeuser
 force_pubkey
+add_btrfs_to_mkinitcpio
