@@ -3,16 +3,15 @@
 # fail on all errors
 set -e
 
-
 ## Execute the following on $INSTALLSRVIP 
-# mkdir /tmp/blankdb ~/archpackages
-# cd ~/archpackages
+# mkdir /tmp/blankdb ~/Projects/arch_autoinstall/archpackages
+# cd ~/Projects/arch_autoinstall/archpackages
 # sudo reflector --country US,Canada --completion-percent 90 --sort rate --latest 20 --protocol https --save /etc/pacman.d/mirrorlist
 # pacman -Syu
-# pacman -Syw --cachedir . --dbpath /tmp/blankdb base linux-zen linux-firmware gdisk refind nano openssh sudo xdg-user-dirs base-devel git archlinux-contrib pacman-contrib rclone wol man-db pigz pbzip2 go wget btrfs-progs nfs-utils ding-libs gssproxy nfsidmap rpcbind git ansible
+# pacman -Syw --cachedir . --dbpath /tmp/blankdb base linux-zen linux-firmware gdisk nano openssh sudo xdg-user-dirs base-devel git archlinux-contrib pacman-contrib rclone wol man-db pigz pbzip2 go wget btrfs-progs nfs-utils ding-libs gssproxy nfsidmap rpcbind git ansible efibootmgr grub grub-btrfs # refind
 # repo-add ./custom.db.tar.gz ./*[^sig]
-# ln -s /var/lib/pacman/sync/*.db ~/archpackages/
-# python -m http.server -d ~/archpackages/
+# ln -s /var/lib/pacman/sync/*.db ~/Projects/arch_autoinstall/archpackages/
+# python -m http.server -d ~/Projects/arch_autoinstall/archpackages/
 
 ## From the booted install media, enter the following command to copy and launch the script
 # ssh-keyscan 192.168.40.5 >> /etc/ssh/ssh_known_hosts && scp lance@192.168.40.5:/home/lance/myscripts/installarch.sh /usr/local/sbin/ && installarch.sh
@@ -47,17 +46,18 @@ mount -o compress=zstd,noatime,subvol=@ $ROOTPART /mnt
 mkdir -p /mnt/{boot/efi,home,.snapshots,var/{cache,log,lib/libvirt/images}}
 mount -o compress=zstd,noatime,subvol=@cache $ROOTPART /mnt/var/cache
 mount -o compress=zstd,noatime,subvol=@home $ROOTPART /mnt/home
-mount -o compress=zstd,noatime,subvol=@images $ROOTPART /mnt/var/lib/libvirt/images
+mount -o noatime,subvol=@images $ROOTPART /mnt/var/lib/libvirt/images # Compression is done using the COW mechanism so it’s incompatible with nodatacow.
+chattr +C /mnt/var/lib/libvirt/images  # disable copy on write in order to speed up IO performance
 mount -o compress=zstd,noatime,subvol=@log $ROOTPART /mnt/var/log
 mount -o compress=zstd,noatime,subvol=@snapshots $ROOTPART /mnt/.snapshots
 mount "$EFIPART" /mnt/boot/efi
 echo "storage prepared"
 
 # install system
-reflector --country US,Canada --completion-percent 90 --sort rate --latest 20 --protocol https --save /etc/pacman.d/mirrorlist
+# reflector --country US,Canada --completion-percent 90 --sort rate --latest 20 --protocol https --save /etc/pacman.d/mirrorlist
 sed -i "1i Server = http://$INSTALLSRVIP:8000/" /etc/pacman.d/mirrorlist
 pacman --noconfirm -Sy archlinux-keyring
-pacstrap -K /mnt base $KERNEL linux-firmware nano openssh sudo xdg-user-dirs archlinux-contrib pacman-contrib btrfs-progs man-db git ansible refind #gdisk nfs-utils rclone wol
+pacstrap -K /mnt base $KERNEL linux-firmware nano openssh sudo xdg-user-dirs archlinux-contrib pacman-contrib btrfs-progs man-db git ansible efibootmgr grub grub-btrfs # refind gdisk nfs-utils rclone wol
 echo "base packages installed"
 
 # configure system
@@ -144,17 +144,20 @@ printf "%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n\n%s\n%s\n" \
 arch-chroot /mnt /bin/bash -c "xdg-user-dirs-update"
 echo "xdg compliance added"
 
-printf "%s\t%s\n" \
-  "\"Boot using default options\"" "\"root=PARTUUID=$(lsblk -rno PARTUUID $ROOTPART) rw rootflags=subvol=@ add_efi_memmap initrd=@\\boot\\initramfs-%v.img\"" | \
-  tee -a /mnt/boot/refind_linux.conf > /dev/null 2>&1
-arch-chroot /mnt /bin/bash -c "refind-install"
-cp /mnt/usr/share/refind/drivers_x64/btrfs_x64.efi /mnt/boot/efi/EFI/refind/drivers_x64/
-printf "\n%s\n" \
-  "extra_kernel_version_strings linux-hardened,linux-zen,linux-lts,linux" | \
-  tee -a /mnt/boot/efi/EFI/refind/refind.conf > /dev/null 2>&1
+# printf "%s\t%s\n" \
+#   "\"Boot using default options\"" "\"root=PARTUUID=$(lsblk -rno PARTUUID $ROOTPART) rw rootflags=subvol=@ add_efi_memmap initrd=@\\boot\\initramfs-%v.img\"" | \
+#   tee -a /mnt/boot/refind_linux.conf > /dev/null 2>&1
+# arch-chroot /mnt /bin/bash -c "refind-install"
+# cp /mnt/usr/share/refind/drivers_x64/btrfs_x64.efi /mnt/boot/efi/EFI/refind/drivers_x64/
+# printf "\n%s\n" \
+#   "extra_kernel_version_strings linux-hardened,linux-zen,linux-lts,linux" | \
+#   tee -a /mnt/boot/efi/EFI/refind/refind.conf > /dev/null 2>&1
+arch-chroot /mnt /bin/bash -c "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB"
+arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 echo "bootloader installed"
 
-scp lance@$INSTALLSRVIP:/home/lance/myscripts/personalizearch.sh /mnt/usr/local/sbin/
-scp lance@$INSTALLSRVIP:/home/lance/myscripts/user-setup.sh /mnt/usr/local/sbin/
+curl -o /mnt/usr/local/sbin/personalizearch.sh http://$INSTALLSRVIP:8000/scripts/personalizearch.sh
+curl -o /mnt/usr/local/sbin/user-setup.sh http://$INSTALLSRVIP:8000/scripts/user-setup.sh
+chmod -R 755 /mnt/usr/local/sbin/
 
 #umount -R /mnt && reboot
