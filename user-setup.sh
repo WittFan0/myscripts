@@ -29,20 +29,43 @@ add_aliases () {
     printf "\n%s\n" "[[ -f \"$HOME/.config/bash/aliases\" ]] && . \"$HOME/.config/bash/aliases\"" | \
     tee -a "$HOME/.config/bash/bashrc" > /dev/null 2>&1
 
-    printf "\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
+    printf "\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
+    "alias grep='grep --color=auto'" \
+    "alias fgrep='fgrep --color=auto'" \
+    "alias egrep='egrep --color=auto'" \
+    "alias gc='cd ~/Projects && git clone'" \
+    "alias reflect='sudo reflector --country US,Canada --completion-percent 90 --sort rate --latest 20 --protocol https --save /etc/pacman.d/mirrorlist'" \
+    "alias ps='ps auxf'" \
+    "alias psgrep=\"ps aux | grep -v grep | grep -i -e VSZ -e\"" \
+    "alias jctl='journalctl -p 3 -xb'" \
+    "alias resource='cls && . ~/.config/bash/bashrc'" \
+    "alias ls='ls -h --color'" \
+    "alias la='ls -a --color'" \
+    "alias ll='ls -l --group-directories-first'" \
+    "alias lr='tree -Chpuga --du'" \
+    "alias listdisks='lsblk -d -o path,label,model,tran,size,pttype,ptuuid,serial,wwn'" \
     "alias reboot='sudo reboot'" \
     "alias poweroff='sudo poweroff'" \
     "alias shutdown='sudo shutdown'" \
     "alias halt='sudo halt'" \
     "alias chown='sudo chown --preserve-root'" \
+    "alias pacman='sudo pacman --color auto'" \
     "alias pacupg='yay -Syu'" \
+    "alias pacupd='yay -Syy'" \
+    "alias pacrem='yay -R'" \
+    "alias pacins='yay -S'" \
+    "alias pacinfo='yay -Si'" \
     "alias ubupg='sudo apt-get update && sudo apt-get upgrade'" \
     "alias srven='sudo systemctl enable'" \
     "alias srvdis='sudo systemctl disable'" \
     "alias srvstart='sudo systemctl start'" \
     "alias srvstop='sudo systemctl stop'" \
     "alias srvrest='sudo systemctl restart'" \
+    "alias srvrel='sudo systemctl reload'" \
+    "alias srvstat='systemctl status'" \
+    "alias srvlist='systemctl list-unit-files --type=service'" \
     "alias grubupdarch='sudo grub-mkconfig -o /boot/grub/grub.cfg'" \
+    "alias mkinitzen='sudo mkinitcpio -p linux-zen'" \
     "alias mkinit='sudo mkinitcpio -p linux'" \
     "alias ping='ping -c 5'" \
     "alias ln='ln -i'" \
@@ -50,21 +73,20 @@ add_aliases () {
     "alias chgrp='chgrp --preserve-root'" \
     "alias wget='wget -c'" \
     "alias srchhist='history | grep'" \
-    "alias srvstat='systemctl status'" \
-    "alias srvlist='systemctl list-unit-files --type=service'" \
-    "alias startvncsrv='/usr/bin/x11vnc -auth guess -noxdamage -display :0 -rfbauth /etc/x11vnc.pwd -rfbport 5900'" \
-    "alias mntgdrv='rclone mount mygoogledrive: ~/mygdrive'" \
+    "alias startvnc='/usr/bin/x11vnc -auth guess -noxdamage -display :0 -rfbauth /etc/x11vnc.pwd -rfbport 5900'" \
+    "alias mntgdrv='rclone mount mygoogledrive: ~/mygdrive --daemon'" \
     "alias sshtaichi='ssh -p 9282 lance@taichi'" \
     "alias sshrpi01='ssh -p 9284 lance@rpi3-01'" \
     "alias waketaichi='wol 70:85:C2:D3:E5:FA'" \
     "alias wakedan='wol 00:1e:37:cc:7e:76'" \
-    "alias df='df -H'" \
+    "alias ssha='eval \$(ssh-agent) && ssh-add'" \
+    "alias dehash='grep -Ev \"^#|^;|^\$\"'" \
+    "alias df='df -h'" \
     "alias du='du -ch'" | \
-    tee -a "$HOME/.config/bash/aliases" > /dev/null 2>&1 # && \
-    # . "$HOME/.config/bash/aliases"  # This appears to only apply to thos shell session. It does not persist once this script exits.
+    tee "$HOME/.config/bash/aliases" > /dev/null 2>&1 # && \
+    # . "$HOME/.config/bash/aliases"  # This appears to only apply to this shell session. It does not persist once this script exits.
 }
 
-## TODO check whether we are on Arch 
 install_yay() {
     if [ -f "/usr/bin/pacman" ]; then
         mkdir -p "$HOME/.config/pacman"
@@ -91,7 +113,9 @@ install_yay() {
     fi
 }
 
+## TODO add GnuPG
+
 xdg_move
 add_path
-add_aliases
+# add_aliases  # This is handled by Ansible during setup
 install_yay
