@@ -30,9 +30,9 @@ VIRTIOISO="-drive file=$ISODIR/virtio-win-0.1.225.iso,index=2,media=cdrom,readon
 NETBOOTISO="file=$ISODIR/netboot.xyz.iso,index=1,media=cdrom,readonly=on"
 UBUNTUSRVISO="file=$ISODIR/jammy-live-server-amd64.iso,index=1,media=cdrom,readonly=on"
 AUTOINSTALLISO="file=$ISODIR/jammy-autoinstall.iso,index=1,media=cdrom,readonly=on"
-ARCHISO="file=$ISODIR/archlinux-2023.04.01-x86_64.iso,index=1,media=cdrom,readonly=on"
-RESCUEISO="file=$ISODIR/rescuezilla-2.3.1-64bit.impish.iso,index=1,media=cdrom,readonly=on"
-NIC2="-netdev bridge,br=br1,id=hn1 -device virtio-net-pci,netdev=hn1,id=nic1,mac=02:00:00:00:00:01"
+ARCHISO="file=$ISODIR/archlinux-x86_64.iso,index=1,media=cdrom,readonly=on"
+# RESCUEISO="file=$ISODIR/rescuezilla-2.3.1-64bit.impish.iso,index=1,media=cdrom,readonly=on"
+# NIC2="-netdev bridge,br=br1,id=hn1 -device virtio-net-pci,netdev=hn1,id=nic1,mac=02:00:00:00:00:01"
 
 case "$VM_NAME" in
     arch)
