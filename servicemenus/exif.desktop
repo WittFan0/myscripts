@@ -1,0 +1,27 @@
+# symlink to ~/.local/share/kio/servicemenus/
+
+[Desktop Entry]
+Type=Service
+MimeType=image/*;video/*;
+Actions=renameFromExifDate;renameFromModDate;setFileModTimeToExif;renameFromFilename;
+X-KDE-Submenu=Modify picture and video files
+
+[Desktop Action renameFromExifDate]
+Name=rename from exif date
+Icon=image-x-generic
+Exec=rename-from-exif-date.sh %F
+
+[Desktop Action renameFromModDate]
+Name=rename from modify date
+Icon=image-x-generic
+Exec=rename-from-modify-date.sh %F
+
+[Desktop Action setFileModTimeToExif]
+Name=set file modification time to exif time
+Icon=image-x-generic
+Exec=file-timestamp-from-exif.sh %F
+
+[Desktop Action renameFromFilename]
+Name=rename from filename
+Icon=image-x-generic
+Exec=rename-without-exif.sh %F
